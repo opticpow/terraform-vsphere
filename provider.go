@@ -11,6 +11,7 @@ func Provider() terraform.ResourceProvider {
 			"vcenter_server": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
+                DefaultFunc: schema.EnvDefaultFunc("VSPHERE_SERVER", nil),
 				Description: "vCenter server address",
 			},
 			"user": &schema.Schema{
