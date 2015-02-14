@@ -23,6 +23,7 @@ func TestAccVirtualMachine_basic(t *testing.T) {
                 ),
             },
         },
+        CheckDestroy: testAccCheckVirtualMachineDestroy,
     })
 }
 
@@ -45,6 +46,10 @@ func testAccCheckVirtualMachineState(key, value string) resource.TestCheckFunc {
 
         return nil
     }
+}
+
+func testAccCheckVirtualMachineDestroy(s *terraform.State) error {
+    return fmt.Errorf("####### %s", s)
 }
 
 const testAccVirtualMachine_basic = `
