@@ -40,8 +40,10 @@ func testAccCheckVirtualMachineState(key, value string) resource.TestCheckFunc {
 
         p := rs.Primary
         if p.Attributes[key] != value {
-            return fmt.Errorf(
-            "%s != %s (actual: %s)", key, value, p.Attributes[key])
+            return fmt.Errorf("%s != %s (actual: %s)", key, value, p.Attributes[key])
+        }
+        if p.Attributes["ip_address"] == "" {
+            return fmt.Errorf("IP address is not set")
         }
 
         return nil
