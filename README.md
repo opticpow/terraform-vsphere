@@ -47,9 +47,14 @@ $ terraform apply
 - `ip_address` - static IP address.
 - `subnet_mask` - required if `ip_address` is specified.
 - `gateway` - used together with `ip_address`.
+- `customization_specification` - customise the guest VM using a predefined customization specification
 
 ## Computed Parameters
 - `ip_address` - if `power_on=true` and VMware Tools are installed in guest OS.
+
+## Windows support
+
+You can now customise Windows VMs by using predefined customisation specifications in vSphere. At this stage specifying customisation using the domain option on the fly is for Linux only
 
 ## Complete Example
 ```

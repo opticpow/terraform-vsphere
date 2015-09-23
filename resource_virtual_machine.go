@@ -1,78 +1,79 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"github.com/hashicorp/terraform/helper/schema"
+  "fmt"
+  "log"
+  "github.com/hashicorp/terraform/helper/schema"
     "golang.org/x/net/context"
     "github.com/vmware/govmomi/find"
     "github.com/vmware/govmomi/object"
     "github.com/vmware/govmomi/property"
     "github.com/vmware/govmomi/vim25"
-	"github.com/vmware/govmomi/vim25/mo"
-	"github.com/vmware/govmomi/vim25/types"
+  "github.com/vmware/govmomi/vim25/mo"
+  "github.com/vmware/govmomi/vim25/types"
     "strings"
 )
 
 func resourceVirtualMachine() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceVirtualMachineCreate,
-		Read:   resourceVirtualMachineRead,
-		Delete: resourceVirtualMachineDelete,
+  return &schema.Resource{
+    Create: resourceVirtualMachineCreate,
+    Read:   resourceVirtualMachineRead,
+    Delete: resourceVirtualMachineDelete,
 
-		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+    Schema: map[string]*schema.Schema{
+      "name": &schema.Schema{
+        Type:     schema.TypeString,
+        Required: true,
                 ForceNew: true,
-			},
-			"image": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+      },
+      "image": &schema.Schema{
+        Type:     schema.TypeString,
+        Required: true,
                 ForceNew: true,
-			},
+      },
 
-			"datacenter": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"folder": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"host": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+      "datacenter": &schema.Schema{
+        Type:     schema.TypeString,
+        Optional: true,
+        Computed: true,
+      },
+      "folder": &schema.Schema{
+        Type:     schema.TypeString,
+        Optional: true,
+        Computed: true,
+      },
+      "host": &schema.Schema{
+        Type:     schema.TypeString,
+        Optional: true,
                 Computed: true,
-			},
-			"resource_pool": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+      },
+      "resource_pool": &schema.Schema{
+        Type:     schema.TypeString,
+        Optional: true,
                 Computed: true,
             },
 
-			"linked_clone": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
+      "linked_clone": &schema.Schema{
+        Type:     schema.TypeBool,
+        Optional: true,
                 Default: false,
                 ForceNew: true,
-			},
-			"cpus": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+      },
+      "cpus": &schema.Schema{
+        Type:     schema.TypeInt,
+        Optional: true,
                 Computed: true,
-			},
-			"memory": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+      },
+      "memory": &schema.Schema{
+        Type:     schema.TypeInt,
+        Optional: true,
                 Computed: true,
-			},
-			"domain": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+      },
+      "domain": &schema.Schema{
+        Type:     schema.TypeString,
+        Optional: true,
+        ForceNew: true,
+      },
             "ip_address": &schema.Schema{
                 Type:     schema.TypeString,
                 Optional: true,
@@ -81,27 +82,35 @@ func resourceVirtualMachine() *schema.Resource {
             "subnet_mask": &schema.Schema{
                 Type:     schema.TypeString,
                 Optional: true,
+                ForceNew: true,
             },
             "gateway": &schema.Schema{
                 Type:     schema.TypeString,
                 Optional: true,
+                ForceNew: true,
             },
             "configuration_parameters": &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
+        Type:     schema.TypeMap,
+        Optional: true,
                 ForceNew: true,
-			},
-			"power_on": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
+      },
+      "power_on": &schema.Schema{
+        Type:     schema.TypeBool,
+        Optional: true,
                 Default:  true,
-			},
-        },
-	}
+                ForceNew: true,
+      },
+      "customization_specification": &schema.Schema{
+        Type:     schema.TypeString,
+        Optional: true,
+        ForceNew: true,
+      },
+    },
+  }
 }
 
 func resourceVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*vim25.Client)
+  client := meta.(*vim25.Client)
 
     dc_name := d.Get("datacenter").(string)
     if dc_name == "" {
@@ -119,11 +128,11 @@ func resourceVirtualMachineCreate(d *schema.ResourceData, meta interface{}) erro
         d.Set("datacenter", dc_name)
     }
 
-	image_name := d.Get("image").(string)
+  image_name := d.Get("image").(string)
     image_ref, err := object.NewSearchIndex(client).FindByInventoryPath(context.TODO(), fmt.Sprintf("%s/vm/%s", dc_name, image_name))
-	if err != nil {
-		return fmt.Errorf("Error reading vm: %s", err)
-	}
+  if err != nil {
+    return fmt.Errorf("Error reading vm: %s", err)
+  }
     if image_ref == nil {
         return fmt.Errorf("Cannot find image %s", image_name)
     }
@@ -135,7 +144,7 @@ func resourceVirtualMachineCreate(d *schema.ResourceData, meta interface{}) erro
         return fmt.Errorf("Error reading base VM properties: %s", err)
     }
 
-	var folder_ref object.Reference
+  var folder_ref object.Reference
     var folder *object.Folder
     if d.Get("folder").(string) != "" {
         folder_ref, err = object.NewSearchIndex(client).FindByInventoryPath(context.TODO(), fmt.Sprintf("%v/vm/%v", dc_name, d.Get("folder").(string)))
@@ -192,14 +201,14 @@ func resourceVirtualMachineCreate(d *schema.ResourceData, meta interface{}) erro
         return fmt.Errorf("Cannot find resource pool %s", pool_name)
     }
 
-	var relocateSpec types.VirtualMachineRelocateSpec
+  var relocateSpec types.VirtualMachineRelocateSpec
     var pool_mor types.ManagedObjectReference
     pool_mor = pool_ref.Reference()
     relocateSpec.Pool = &pool_mor
 
-	if d.Get("linked_clone").(bool) {
-		relocateSpec.DiskMoveType = "createNewChildDiskBacking"
-	}
+  if d.Get("linked_clone").(bool) {
+    relocateSpec.DiskMoveType = "createNewChildDiskBacking"
+  }
     var confSpec types.VirtualMachineConfigSpec
     if d.Get("cpus") != nil {
         confSpec.NumCPUs = d.Get("cpus").(int)
@@ -223,11 +232,11 @@ func resourceVirtualMachineCreate(d *schema.ResourceData, meta interface{}) erro
         confSpec.ExtraConfig = ov
     }
 
-	cloneSpec := types.VirtualMachineCloneSpec{
-		Location: relocateSpec,
+  cloneSpec := types.VirtualMachineCloneSpec{
+    Location: relocateSpec,
         Config:   &confSpec,
         PowerOn:  d.Get("power_on").(bool),
-	}
+  }
     if d.Get("linked_clone").(bool) {
         if image_mo.Snapshot == nil {
             return fmt.Errorf("`linked_clone=true`, but image VM has no snapshots")
@@ -237,7 +246,28 @@ func resourceVirtualMachineCreate(d *schema.ResourceData, meta interface{}) erro
 
     domain := d.Get("domain").(string)
     ip_address := d.Get("ip_address").(string)
-    if domain != "" {
+
+    customizationSpecification := d.Get("customization_specification").(string)
+
+    if customizationSpecification != "" {
+      specManager := object.NewCustomizationSpecManager(client)
+      specItem, err := specManager.GetCustomizationSpec(context.TODO(), customizationSpecification )
+      if err != nil {
+        return err
+      }
+
+      if ip_address != "" {
+        ip := types.CustomizationFixedIp{
+          IpAddress: ip_address,
+        }
+        specItem.Spec.NicSettingMap[0].Adapter.Ip = &ip
+      } else {
+        ip := types.CustomizationDhcpIpGenerator{}
+        specItem.Spec.NicSettingMap[0].Adapter.Ip = &ip
+      }
+
+      cloneSpec.Customization = &specItem.Spec
+    } else if domain != "" {
         if image_mo.Guest.ToolsVersionStatus2 == "guestToolsNotInstalled" {
             return fmt.Errorf("VMware tools are not installed in base VM")
         }
@@ -277,16 +307,16 @@ func resourceVirtualMachineCreate(d *schema.ResourceData, meta interface{}) erro
         return fmt.Errorf("'domain' must be set, if static 'ip_address' is specified")
     }
 
-	task, err := image.Clone(context.TODO(), folder, d.Get("name").(string), cloneSpec)
-	if err != nil {
-		return fmt.Errorf("Error clonning vm: %s", err)
-	}
-	info, err := task.WaitForResult(context.TODO(), nil)
-	if err != nil {
-		return fmt.Errorf("Error clonning vm: %s", err)
-	}
+  task, err := image.Clone(context.TODO(), folder, d.Get("name").(string), cloneSpec)
+  if err != nil {
+    return fmt.Errorf("Error clonning vm: %s", err)
+  }
+  info, err := task.WaitForResult(context.TODO(), nil)
+  if err != nil {
+    return fmt.Errorf("Error clonning vm: %s", err)
+  }
 
-	vm_mor := info.Result.(types.ManagedObjectReference)
+  vm_mor := info.Result.(types.ManagedObjectReference)
     d.SetId(vm_mor.Value)
     vm := object.NewVirtualMachine(client, vm_mor)
     // workaround for https://github.com/vmware/govmomi/issues/218
@@ -337,7 +367,7 @@ func resourceVirtualMachineRead(d *schema.ResourceData, meta interface{}) error 
         }
     }
 
-	return nil
+  return nil
 }
 
 func resourceVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
